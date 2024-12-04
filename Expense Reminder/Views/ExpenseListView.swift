@@ -1,67 +1,52 @@
-//
-//  ExpenseListView.swift
-//  Expense Reminder
-//
-//  Created by Amir Ghari on 11/19/24.
-//
-
 
 import SwiftUI
 
 struct ExpenseListView: View {
-    @StateObject var viewModel = ExpenseViewModel()
-    @State private var showingAddExpense = false
-    @State private var showingBudgetSettings = false
-
+    @ObservedObject var viewModel: ExpenseViewModel
+    
     var body: some View {
-        NavigationView {
-            VStack {
-                HStack {
-                    Text("Total Spent: $\(String(format: "%.2f", viewModel.totalSpent))")
-                    Spacer()
-                    Text("Remaining: $\(String(format: "%.2f", viewModel.remainingBudget))")
-                }
-                .padding()
-
-                List {
-                    ForEach(viewModel.expenses) { expense in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(expense.category.rawValue)
-                                    .font(.headline)
-                                Text(expense.note ?? "")
+        VStack {
+            Text("Your Expenses")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .padding(.top, 50)
+            
+            // Display Expenses List
+            if viewModel.expenses.isEmpty {
+                Text("No expenses added yet.")
+                    .font(.title2)
+                    .foregroundColor(.gray)
+                    .padding()
+            } else {
+                List(viewModel.expenses) { expense in
+                    HStack {
+                        // Category Icon
+                        Image(systemName: expense.category.iconName)
+                            .foregroundColor(expense.category.categoryColor)
+                            .padding(.trailing, 10)
+                        
+                        // Expense Details
+                        VStack(alignment: .leading) {
+                            Text(expense.category.rawValue)
+                                .font(.headline)
+                            Text("$\(expense.amount, specifier: "%.2f")")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                            if let note = expense.note {
+                                Text(note)
                                     .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.gray)
+                                    .italic()
                             }
-                            Spacer()
-                            Text("$\(String(format: "%.2f", expense.amount))")
                         }
                     }
-                    .onDelete(perform: viewModel.deleteExpense)
+                    .padding()
                 }
-                .listStyle(PlainListStyle())
             }
-            .navigationTitle("Expenses")
-            .navigationBarItems(
-                leading:
-                    Button(action: {
-                        showingBudgetSettings = true
-                    }) {
-                        Image(systemName: "gearshape")
-                    },
-                trailing:
-                    Button(action: {
-                        showingAddExpense = true
-                    }) {
-                        Image(systemName: "plus")
-                    }
-            )
-            .sheet(isPresented: $showingAddExpense) {
-                AddExpenseView(viewModel: viewModel)
-            }
-            .sheet(isPresented: $showingBudgetSettings) {
-                BudgetSettingsView(viewModel: viewModel)
-            }
+            
+            Spacer()
         }
+        .padding()
+        .navigationBarTitle("Expenses", displayMode: .inline)
     }
 }
